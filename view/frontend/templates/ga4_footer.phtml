@@ -1,0 +1,51 @@
+<?php
+/** @var  $helper \Meetanshi\GA4\Helper\Data */
+$helper = $this->helper('Meetanshi\GA4\Helper\Data');
+$customerSession = $helper->getCustomerSession();
+?>
+<?php if ($helper->isEnable()) : ?>
+    <!-- For login/sign up -->
+    <?php if ($helper->getLoginValue() != null):
+        $custId = $helper->getLoginValue(); ?>
+        <script>
+            window.dataLayer.push({ecommerce: null});
+            window.dataLayer.push({'event': 'login', 'method': 'email', 'user_id': <?php echo "$custId";?>});
+        </script>
+        <?php $customerSession->setLoginVal(null); endif; ?>
+
+    <?php if ($helper->getSignInValue() != null):
+        $custIdSign = $customerSession->getSignup(); ?>
+        <script>
+            window.dataLayer.push({ecommerce: null});
+            window.dataLayer.push({'event': 'sign_up', 'method': 'email', 'user_id': <?php echo "$custIdSign";?>});
+        </script>
+        <?php $customerSession->setSignup(null); endif; ?>
+
+    <?php if ($helper->getLoggedInId() != null):
+        $customerId = $helper->getLoggedInId(); ?>
+        <script>
+            window.dataLayer.push({ecommerce: null});
+            window.dataLayer.push({'user_id': <?php echo "$customerId";?>});
+        </script>
+    <?php endif; ?>
+
+    <?php if ($helper->isMoveJsBottom()) :
+        echo $helper->getGAJSCode(); ?>
+    <?php endif; ?>
+    <script>
+        require(['jquery', 'Magento_Customer/js/customer-data'],
+            function ($, customerData) {
+                $(document).ajaxComplete(function (event, xhr, settings) {
+                    if (settings.url.search('/customer\/section\/load/') > 0) {
+                        var response = xhr.responseJSON;
+                        if (response.ga4_customer_section) {
+                            var dataLayerSectionData = $.parseJSON(response.ga4_customer_section.datalayer);
+                            for (indx in dataLayerSectionData) {
+                                window.dataLayer.push(dataLayerSectionData[indx]);
+                            }
+                        }
+                    }
+                });
+            });
+    </script>
+<?php endif; ?>
